@@ -1,0 +1,10 @@
+.next
+out
+build
+coverage
+node_modules
+package-lock.json
+next-env.d.ts
+
+# 課題として配布された資料。原文のまま保持する
+docs/exam

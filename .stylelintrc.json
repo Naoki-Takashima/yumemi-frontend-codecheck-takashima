@@ -1,0 +1,35 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "rules": {
+    "selector-class-pattern": [
+      "^[a-z][a-zA-Z0-9]*$",
+      {
+        "message": "CSS Modules のクラス名は camelCase で記述してください"
+      }
+    ],
+    "custom-property-pattern": [
+      "^[a-z][a-zA-Z0-9]*(-[a-z0-9]+)*$",
+      {
+        "message": "カスタムプロパティは kebab-case で記述してください"
+      }
+    ],
+    "property-no-unknown": [
+      true,
+      {
+        "ignoreProperties": ["composes"]
+      }
+    ],
+    "selector-pseudo-class-no-unknown": [
+      true,
+      {
+        "ignorePseudoClasses": ["global", "local"]
+      }
+    ],
+    "declaration-block-no-duplicate-properties": [
+      true,
+      {
+        "ignore": ["consecutive-duplicates-with-different-values"]
+      }
+    ]
+  }
+}
