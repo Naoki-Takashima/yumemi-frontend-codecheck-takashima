@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# 同じブランチで新しい push があれば、古い実行は打ち切る
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# 既定の書き込み権限を与えない
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: 型・Lint・テスト・ビルド
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリを取得
+        uses: actions/checkout@v7
+
+      - name: Node.js をセットアップ
+        uses: actions/setup-node@v7
+        with:
+          # ローカルと同じバージョンを .nvmrc から読む
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: 依存をインストール
+        run: npm ci
+
+      - name: 型チェック
+        run: npm run typecheck
+
+      - name: Lint（ESLint / Stylelint）
+        run: npm run lint
+
+      - name: フォーマット確認
+        run: npm run format:check
+
+      - name: テスト
+        run: npm test
+
+      # API キーは実行時にしか読まないため、ビルドに環境変数は不要
+      - name: ビルド
+        run: npm run build
