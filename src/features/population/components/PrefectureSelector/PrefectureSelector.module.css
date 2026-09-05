@@ -25,6 +25,12 @@
   font-size: var(--font-size-sm);
 }
 
+/* 上限に達した理由。件数のすぐ隣に置く */
+.limitNote {
+  margin-left: var(--space-2);
+  color: var(--color-text);
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
@@ -53,12 +59,26 @@
   background-color: var(--color-accent-subtle);
 }
 
+.item[data-disabled] {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.item[data-disabled]:hover {
+  background-color: transparent;
+}
+
 .checkbox {
   flex-shrink: 0;
   width: 1.125rem;
   height: 1.125rem;
   accent-color: var(--color-accent);
   cursor: pointer;
+}
+
+.checkbox:disabled {
+  cursor: not-allowed;
 }
 
 .name {

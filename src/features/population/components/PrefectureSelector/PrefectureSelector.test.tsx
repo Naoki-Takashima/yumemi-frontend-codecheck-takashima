@@ -110,9 +110,9 @@ describe('PrefectureSelector', () => {
 
   describe('選択件数の表示', () => {
     it.each([
-      [[], '0 件選択中'],
-      [[13], '1 件選択中'],
-      [[13, 27, 1], '3 件選択中'],
+      [[], '0 / 10 件選択中'],
+      [[13], '1 / 10 件選択中'],
+      [[13, 27, 1], '3 / 10 件選択中'],
     ])('%j のとき「%s」と表示する', (selectedCodes, expected) => {
       setup({ selectedCodes });
 
@@ -122,7 +122,59 @@ describe('PrefectureSelector', () => {
     it('件数の変化が読み上げられるよう aria-live を持つ', () => {
       setup({ selectedCodes: [13] });
 
-      expect(screen.getByText('1 件選択中')).toHaveAttribute('aria-live', 'polite');
+      expect(screen.getByText(/1 \/ 10 件選択中/)).toHaveAttribute('aria-live', 'polite');
+    });
+  });
+
+  describe('選択できる上限', () => {
+    /** 上限ちょうどまで選んだ状態（prefCode 1〜10）。 */
+    const fullSelection = Array.from({ length: 10 }, (_, index) => index + 1);
+
+    it('上限に達していなければ未選択のものを選べる', () => {
+      setup({ selectedCodes: fullSelection.slice(0, 9) });
+
+      expect(screen.getByRole('checkbox', { name: '東京都' })).toBeEnabled();
+    });
+
+    it('上限に達すると未選択のものは選べなくなる', () => {
+      setup({ selectedCodes: fullSelection });
+
+      expect(screen.getByRole('checkbox', { name: '東京都' })).toBeDisabled();
+      expect(screen.getByRole('checkbox', { name: '沖縄県' })).toBeDisabled();
+    });
+
+    it('上限に達しても選択済みのものは外せる', () => {
+      setup({ selectedCodes: fullSelection });
+
+      // 選択済みまで無効にすると、上限から抜け出せなくなる
+      expect(screen.getByRole('checkbox', { name: '北海道' })).toBeEnabled();
+    });
+
+    it('上限に達したら、次にとるべき操作を伝える', () => {
+      setup({ selectedCodes: fullSelection });
+
+      expect(screen.getByText(/いずれかの選択を外してください/)).toBeInTheDocument();
+    });
+
+    it('上限に達していなければ案内は出さない', () => {
+      setup({ selectedCodes: fullSelection.slice(0, 9) });
+
+      expect(screen.queryByText(/いずれかの選択を外してください/)).not.toBeInTheDocument();
+    });
+
+    it('無効なチェックボックスは押しても onToggle が呼ばれない', async () => {
+      const { onToggle, user } = setup({ selectedCodes: fullSelection });
+
+      await user.click(screen.getByRole('checkbox', { name: '東京都' }));
+
+      expect(onToggle).not.toHaveBeenCalled();
+    });
+
+    it('上限は変更できる', () => {
+      setup({ selectedCodes: [1, 2, 3], maxSelectable: 3 });
+
+      expect(screen.getByText(/3 \/ 3 件選択中/)).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: '東京都' })).toBeDisabled();
     });
   });
 

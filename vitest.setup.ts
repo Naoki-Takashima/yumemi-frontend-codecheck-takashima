@@ -4,6 +4,16 @@ import { afterAll, afterEach, beforeAll } from 'vitest';
 
 import { server } from '@/test/msw/server';
 
+if (!('ResizeObserver' in globalThis)) {
+  globalThis.ResizeObserver = class {
+    observe() {
+      // jsdom はレイアウトを計算しないため、通知するサイズが無い
+    }
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
 // onUnhandledRequest: 'error' により、モックし忘れたリクエストはテストを失敗させる。
 // テストが実際の API を叩いてしまう事故を防ぐ。
 beforeAll(() => {

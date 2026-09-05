@@ -1,6 +1,7 @@
 'use client';
 
 import styles from '@/features/population/components/PrefectureSelector/PrefectureSelector.module.css';
+import { MAX_SELECTABLE_PREFECTURES } from '@/features/population/constants';
 import type { Prefecture } from '@/features/population/types';
 import { Button } from '@/shared/components/Button';
 import { ErrorState } from '@/shared/components/ErrorState';
@@ -15,6 +16,7 @@ type PrefectureSelectorProps = {
   isLoading?: boolean;
   isError?: boolean;
   onRetry?: () => void;
+  maxSelectable?: number;
 };
 
 /**
@@ -28,8 +30,10 @@ export function PrefectureSelector({
   isLoading = false,
   isError = false,
   onRetry,
+  maxSelectable = MAX_SELECTABLE_PREFECTURES,
 }: PrefectureSelectorProps) {
   const selectedCount = selectedCodes.length;
+  const isFull = selectedCount >= maxSelectable;
 
   return (
     <fieldset className={styles.container}>
@@ -38,7 +42,12 @@ export function PrefectureSelector({
       {!isLoading && !isError && (
         <div className={styles.head}>
           <span className={styles.count} aria-live="polite">
-            {selectedCount} 件選択中
+            {selectedCount} / {maxSelectable} 件選択中
+            {isFull && (
+              <span className={styles.limitNote}>
+                （他の都道府県を選ぶには、いずれかの選択を外してください）
+              </span>
+            )}
           </span>
           <Button onClick={onClear} disabled={selectedCount === 0}>
             すべて解除
@@ -60,19 +69,29 @@ export function PrefectureSelector({
         </div>
       ) : (
         <div className={styles.grid}>
-          {prefectures.map((prefecture) => (
-            <label key={prefecture.prefCode} className={styles.item}>
-              <input
-                type="checkbox"
-                className={styles.checkbox}
-                checked={selectedCodes.includes(prefecture.prefCode)}
-                onChange={() => {
-                  onToggle(prefecture.prefCode);
-                }}
-              />
-              <span className={styles.name}>{prefecture.prefName}</span>
-            </label>
-          ))}
+          {prefectures.map((prefecture) => {
+            const isSelected = selectedCodes.includes(prefecture.prefCode);
+            const isDisabled = isFull && !isSelected;
+
+            return (
+              <label
+                key={prefecture.prefCode}
+                className={styles.item}
+                data-disabled={isDisabled || undefined}
+              >
+                <input
+                  type="checkbox"
+                  className={styles.checkbox}
+                  checked={isSelected}
+                  disabled={isDisabled}
+                  onChange={() => {
+                    onToggle(prefecture.prefCode);
+                  }}
+                />
+                <span className={styles.name}>{prefecture.prefName}</span>
+              </label>
+            );
+          })}
         </div>
       )}
     </fieldset>

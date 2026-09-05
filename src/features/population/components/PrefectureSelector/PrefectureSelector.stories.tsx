@@ -47,10 +47,19 @@ export const Selected: Story = {
   args: { selectedCodes: [13, 27, 1] },
 };
 
-/** 47 件すべてを選択した状態。グリッドが崩れないことを確認する。 */
-export const AllSelected: Story = {
-  name: '全件選択',
-  args: { selectedCodes: prefecturesFixture.map((p) => p.prefCode) },
+/**
+ * 選択の上限に達した状態。
+ * 未選択のものは選べなくなるが、選択済みは外せる。
+ */
+export const AtLimit: Story = {
+  name: '上限に到達',
+  args: { selectedCodes: Array.from({ length: 10 }, (_, index) => index + 1) },
+};
+
+/** 上限を小さくした場合。上限は props で変えられる。 */
+export const CustomLimit: Story = {
+  name: '上限 3 件',
+  args: { selectedCodes: [1, 2, 3], maxSelectable: 3 },
 };
 
 /**

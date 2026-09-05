@@ -2,9 +2,9 @@
   "extends": ["stylelint-config-standard"],
   "rules": {
     "selector-class-pattern": [
-      "^[a-z][a-zA-Z0-9]*$",
+      "^([a-z][a-zA-Z0-9]*|recharts-[a-z0-9-]+)$",
       {
-        "message": "CSS Modules のクラス名は camelCase で記述してください"
+        "message": "CSS Modules のクラス名は camelCase で記述してください（recharts- は :global() で参照する外部ライブラリのクラス名）"
       }
     ],
     "custom-property-pattern": [
