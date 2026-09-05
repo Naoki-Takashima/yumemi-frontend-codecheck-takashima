@@ -1,0 +1,88 @@
+.chart {
+  height: clamp(18rem, 50vh, 32rem);
+}
+
+.note {
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 12rem;
+  padding: var(--space-6);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  text-align: center;
+  background-color: var(--color-surface);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.chart :global(.recharts-cartesian-axis-tick-value),
+.chart :global(.recharts-legend-item-text) {
+  fill: var(--color-text-muted);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.chart :global(.recharts-cartesian-grid line) {
+  stroke: var(--color-border);
+}
+
+.chart :global(.recharts-reference-line-line) {
+  stroke: var(--color-text-muted);
+}
+
+.tooltip {
+  padding: var(--space-3);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.tooltipYear {
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.tooltipList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+}
+
+.tooltipItem {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tooltipName {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.tooltipSwatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: var(--radius-sm);
+}
+
+.tooltipValue {
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltipEstimate {
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
