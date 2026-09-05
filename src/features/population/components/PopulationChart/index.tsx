@@ -6,7 +6,6 @@ import {
   Legend,
   Line,
   LineChart,
-  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -23,6 +22,9 @@ type PopulationChartProps = {
   entries: PopulationEntry[];
   type: PopulationType;
 };
+
+const AXIS_LABEL_RISE = 32;
+const AXIS_LABEL_RESERVE = 56;
 
 function buildStyleMap(entries: PopulationEntry[]) {
   return new Map(
@@ -54,7 +56,11 @@ export function PopulationChart({ entries, type }: PopulationChartProps) {
 
       <div className={styles.chart} aria-hidden="true">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={rows} margin={{ top: 8, right: 16, bottom: 24, left: 16 }}>
+          <LineChart
+            data={rows}
+            margin={{ top: 8, right: 16, bottom: 24, left: 16 }}
+            accessibilityLayer={false}
+          >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
 
             <XAxis dataKey="year" tickMargin={8}>
@@ -62,19 +68,8 @@ export function PopulationChart({ entries, type }: PopulationChartProps) {
             </XAxis>
 
             <YAxis tickFormatter={formatPopulationShort} width={72}>
-              <Label
-                value="人口数"
-                angle={-90}
-                position="insideLeft"
-                style={{ textAnchor: 'middle' }}
-              />
+              <Label value="人口数" position="insideTopLeft" dy={-AXIS_LABEL_RISE} />
             </YAxis>
-
-            {hasEstimate && (
-              <ReferenceLine x={boundaryYear} stroke="currentColor" strokeDasharray="4 4">
-                <Label value="これ以降は推計値" position="insideTopRight" fontSize={12} />
-              </ReferenceLine>
-            )}
 
             <Tooltip
               content={({ active, payload, label }) => {
@@ -112,7 +107,7 @@ export function PopulationChart({ entries, type }: PopulationChartProps) {
               }}
             />
 
-            <Legend verticalAlign="top" height={36} />
+            <Legend verticalAlign="top" wrapperStyle={{ paddingLeft: AXIS_LABEL_RESERVE }} />
 
             {prefNames.map((prefName) => {
               const style = seriesStyles.get(prefName);

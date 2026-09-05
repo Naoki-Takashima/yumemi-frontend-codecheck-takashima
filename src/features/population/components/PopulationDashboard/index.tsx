@@ -16,17 +16,26 @@ import { ErrorState } from '@/shared/components/ErrorState';
 import { Spinner } from '@/shared/components/Spinner';
 
 /**
- * 都道府県の選択、人口種別の切り替え、グラフ表示をまとめる画面。
+ * 読み上げ用の状況説明
  */
+function statusMessage(selectedCount: number, loadedCount: number) {
+  if (selectedCount === 0) {
+    return '都道府県は選択されていません。';
+  }
+
+  if (loadedCount === 0) {
+    return '人口データを読み込んでいます。';
+  }
+
+  return `${String(loadedCount)} 件の都道府県をグラフに表示しています。`;
+}
+
 export function PopulationDashboard() {
   const prefecturesQuery = usePrefectures();
   const selection = useChartSelection();
 
   const prefectures = prefecturesQuery.data ?? [];
 
-  /**
-   * 選択された都道府県を URL に書かれた順で取り出す。
-   */
   const prefectureByCode = new Map(
     prefectures.map((prefecture) => [prefecture.prefCode, prefecture]),
   );
@@ -66,6 +75,10 @@ export function PopulationDashboard() {
               onRetry={populations.retryFailed}
             />
           )}
+
+          <p className="srOnly" role="status">
+            {statusMessage(selection.prefCodes.length, populations.entries.length)}
+          </p>
 
           {selection.prefCodes.length === 0 ? (
             <p className={styles.empty}>都道府県を選択すると、人口の推移を表示します。</p>

@@ -19,8 +19,9 @@ const meta = {
   argTypes: {
     variant: {
       control: 'inline-radio',
-      options: ['outline', 'primary'],
-      description: 'outline は補助的な操作、primary は主要な操作に使う',
+      options: ['outline', 'primary', 'link'],
+      description:
+        'outline は補助的な操作、primary は主要な操作、link は囲みを出したくない弱い操作に使う',
     },
     disabled: { control: 'boolean' },
   },
@@ -40,23 +41,31 @@ export const Primary: Story = {
   args: { variant: 'primary' },
 };
 
+export const Link: Story = {
+  args: { variant: 'link', children: 'すべて解除' },
+};
+
 /** 押せない状態。選択が 0 件のときの「すべて解除」など。 */
 export const Disabled: Story = {
   args: { variant: 'outline', disabled: true },
 };
 
-/** 2 つの見た目を並べて比較する。 */
+/** 3 つの見た目を並べて比較する。 */
 export const AllVariants: Story = {
   name: '一覧',
   render: () => (
-    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
       <Button variant="outline">outline</Button>
       <Button variant="primary">primary</Button>
+      <Button variant="link">link</Button>
       <Button variant="outline" disabled>
         outline / disabled
       </Button>
       <Button variant="primary" disabled>
         primary / disabled
+      </Button>
+      <Button variant="link" disabled>
+        link / disabled
       </Button>
     </div>
   ),
