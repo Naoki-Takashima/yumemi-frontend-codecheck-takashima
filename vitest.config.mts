@@ -1,11 +1,21 @@
+import { fileURLToPath } from 'node:url';
+
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [react()],
-  // tsconfig の paths（@/*）をテストでもそのまま解決させる
   resolve: {
+    // tsconfig の paths（@/*）をテストでもそのまま解決させる
     tsconfigPaths: true,
+    alias: [
+      {
+        // server-only は「react-server」条件でしか読めず、そのままでは例外を投げる。
+        // テストでは無害なスタブに差し替える（本番ビルドはこの設定を通らない）。
+        find: /^server-only$/,
+        replacement: fileURLToPath(new URL('./src/test/stubs/server-only.ts', import.meta.url)),
+      },
+    ],
   },
   test: {
     environment: 'jsdom',

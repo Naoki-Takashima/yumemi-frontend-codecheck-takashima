@@ -41,14 +41,14 @@ const eslintConfig = defineConfig([
   // `server-only` パッケージがビルド時に弾くが、lint でより早く気付けるようにする。
   {
     files: ['src/**/*.{ts,tsx}'],
-    ignores: ['src/app/api/**', 'src/shared/api/server/**'],
+    ignores: ['src/app/api/**', 'src/features/*/server/**'],
     rules: {
       'no-restricted-imports': [
         'error',
         {
           patterns: [
             {
-              group: ['@/shared/api/server', '@/shared/api/server/**', '**/api/server/**'],
+              group: ['@/features/*/server', '@/features/*/server/**', '**/*/server/*'],
               message:
                 'API キーを扱うサーバー専用モジュールです。Route Handler (src/app/api/**) からのみ import してください。',
             },
