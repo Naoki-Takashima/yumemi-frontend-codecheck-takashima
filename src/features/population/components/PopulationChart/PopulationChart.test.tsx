@@ -46,6 +46,17 @@ describe('PopulationChart', () => {
     });
   });
 
+  describe('軸のラベル', () => {
+    it('縦軸と横軸の名前を出す', () => {
+      const { container } = render(
+        <PopulationChart entries={[entry(13, '東京都')]} type="total" />,
+      );
+
+      expect(container.textContent).toContain('人口数');
+      expect(container.textContent).toContain('年度');
+    });
+  });
+
   describe('凡例', () => {
     it('選択した都道府県を並べる', () => {
       render(<PopulationChart entries={[entry(13, '東京都'), entry(27, '大阪府')]} type="total" />);
@@ -62,12 +73,14 @@ describe('PopulationChart', () => {
       expect(screen.getByText(/2020 年より後の値は推計値です/)).toBeInTheDocument();
     });
 
-    it('グラフ上にも境界を示すラベルを描く', () => {
+    it('グラフの中には境界線を引かない', () => {
+      // 推計値であることは注記とツールチップで伝える
       const { container } = render(
         <PopulationChart entries={[entry(13, '東京都')]} type="total" />,
       );
 
-      expect(container.textContent).toContain('これ以降は推計値');
+      expect(container.querySelector('.recharts-reference-line')).toBeNull();
+      expect(container.textContent).not.toContain('これ以降は推計値');
     });
 
     it('推計値の年を含まないデータには注記を出さない', () => {

@@ -34,10 +34,6 @@
   stroke: var(--color-border);
 }
 
-.chart :global(.recharts-reference-line-line) {
-  stroke: var(--color-text-muted);
-}
-
 .tooltip {
   padding: var(--space-3);
   background-color: var(--color-bg);
