@@ -1,11 +1,21 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { PopulationDashboard } from '@/features/population/components/PopulationDashboard';
+import { createPopulationFixture } from '@/test/fixtures/population';
 import { server } from '@/test/msw/server';
 import { renderWithProviders } from '@/test/renderWithProviders';
+
+// vi.mock はファイル先頭へ巻き上げられるため、
+// ファクトリの中では import 済みの変数を参照できない。動的に読み込む。
+vi.mock('recharts', async () => {
+  const actual = await vi.importActual<typeof import('recharts')>('recharts');
+  const { MockResponsiveContainer } = await import('@/test/mockResponsiveContainer');
+
+  return { ...actual, ResponsiveContainer: MockResponsiveContainer };
+});
 
 describe('PopulationDashboard', () => {
   async function renderAndWait() {
@@ -103,6 +113,73 @@ describe('PopulationDashboard', () => {
 
       expect(screen.getByRole('checkbox', { name: '東京都' })).toBeChecked();
       expect(screen.getByText('1 件選択中')).toBeInTheDocument();
+    });
+  });
+
+  describe('グラフ', () => {
+    it('都道府県を選ぶまでは案内を出す', async () => {
+      await renderAndWait();
+
+      expect(screen.getByText(/都道府県を選択すると/)).toBeInTheDocument();
+    });
+
+    it('選択するとグラフの説明が現れる', async () => {
+      const { user } = await renderAndWait();
+
+      await user.click(screen.getByRole('checkbox', { name: '東京都' }));
+
+      expect(await screen.findByText(/総人口の推移/)).toBeInTheDocument();
+      expect(screen.getByText(/総人口の推移/)).toHaveTextContent('東京都');
+    });
+
+    it('タブを切り替えるとグラフの種別も変わる', async () => {
+      const { user } = await renderAndWait();
+
+      await user.click(screen.getByRole('checkbox', { name: '東京都' }));
+      await screen.findByText(/総人口の推移/);
+
+      await user.click(screen.getByRole('tab', { name: '老年人口' }));
+
+      expect(await screen.findByText(/老年人口の推移/)).toBeInTheDocument();
+    });
+
+    it('選択を解除するとグラフが消えて案内に戻る', async () => {
+      const { user } = await renderAndWait();
+
+      await user.click(screen.getByRole('checkbox', { name: '東京都' }));
+      await screen.findByText(/総人口の推移/);
+
+      await user.click(screen.getByRole('button', { name: 'すべて解除' }));
+
+      expect(screen.getByText(/都道府県を選択すると/)).toBeInTheDocument();
+    });
+
+    it('一部の県だけ失敗しても、取れた分は表示する', async () => {
+      server.use(
+        http.get('*/api/population', ({ request }) => {
+          const prefCode = new URL(request.url).searchParams.get('prefCode');
+
+          // 大阪府（27）だけ失敗させる
+          if (prefCode === '27') {
+            return HttpResponse.json(
+              { error: { code: 'UPSTREAM_ERROR', message: '取得できませんでした' } },
+              { status: 502 },
+            );
+          }
+
+          return HttpResponse.json({ result: createPopulationFixture(Number(prefCode)) });
+        }),
+      );
+
+      const { user } = await renderAndWait();
+
+      await user.click(screen.getByRole('checkbox', { name: '東京都' }));
+      await user.click(screen.getByRole('checkbox', { name: '大阪府' }));
+
+      // 成功した東京都はグラフに残る
+      expect(await screen.findByText(/総人口の推移/)).toHaveTextContent('東京都');
+      // 失敗した大阪府だけを知らせる
+      expect(await screen.findByRole('alert')).toHaveTextContent('大阪府');
     });
   });
 

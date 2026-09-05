@@ -11,7 +11,20 @@
 }
 
 .tabpanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
   min-height: 12rem;
+}
+
+.loading {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: center;
+  min-height: 12rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }
 
 .empty {
