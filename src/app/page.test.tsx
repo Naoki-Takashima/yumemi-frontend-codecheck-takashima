@@ -1,10 +1,21 @@
 import { screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import Home from '@/app/page';
+import { nextNavigationMock } from '@/test/mockNextNavigation';
 import { renderWithProviders } from '@/test/renderWithProviders';
 
+vi.mock('next/navigation', async () => {
+  const { createNextNavigationMock } = await import('@/test/mockNextNavigation');
+
+  return createNextNavigationMock();
+});
+
 describe('トップページ', () => {
+  beforeEach(() => {
+    nextNavigationMock.reset();
+  });
+
   it('見出しを表示する', () => {
     renderWithProviders(<Home />);
 

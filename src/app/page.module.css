@@ -20,6 +20,13 @@
   font-size: var(--font-size-sm);
 }
 
+.loading {
+  padding: var(--space-8) 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
 @media (width >= 768px) {
   .page {
     padding-inline: var(--space-6);

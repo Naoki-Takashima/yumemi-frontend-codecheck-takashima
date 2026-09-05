@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+
 import styles from '@/app/page.module.css';
 import { PopulationDashboard } from '@/features/population/components/PopulationDashboard';
 
@@ -11,7 +13,9 @@ export default function Home() {
         </p>
       </header>
 
-      <PopulationDashboard />
+      <Suspense fallback={<p className={styles.loading}>読み込んでいます…</p>}>
+        <PopulationDashboard />
+      </Suspense>
     </main>
   );
 }
