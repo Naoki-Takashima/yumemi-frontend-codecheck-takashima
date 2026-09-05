@@ -90,6 +90,9 @@ CLAUDE.md
 ### Vercel
 .vercel
 
+### Storybook
+storybook-static/
+
 ### プロジェクト固有
 # 配布された課題資料（作業用。リポジトリには含めない）
 docs/exam/

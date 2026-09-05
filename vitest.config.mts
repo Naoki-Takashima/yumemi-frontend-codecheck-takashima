@@ -25,7 +25,13 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html'],
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/test/**', 'src/**/*.{test,spec}.{ts,tsx}', 'src/**/*.d.ts'],
+      exclude: [
+        'src/test/**',
+        'src/**/*.{test,spec}.{ts,tsx}',
+        // ストーリーは表示確認用でテスト対象ではない
+        'src/**/*.stories.{ts,tsx}',
+        'src/**/*.d.ts',
+      ],
     },
   },
 });

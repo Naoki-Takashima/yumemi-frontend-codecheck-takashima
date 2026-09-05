@@ -164,6 +164,30 @@ describe('GET /api/population', () => {
     });
   });
 
+  describe('上流へ到達できない場合', () => {
+    it('通信が成立しないときは 500 ではなく 503 を返す', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      server.use(http.get(UPSTREAM_PATH, () => HttpResponse.error()));
+
+      const response = await GET(requestFor('?prefCode=13'));
+      const body = (await response.json()) as { error: { code: string } };
+
+      expect(response.status).toBe(503);
+      expect(body.error.code).toBe('UPSTREAM_UNAVAILABLE');
+    });
+
+    it('通信の失敗理由をクライアントに漏らさない', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      server.use(http.get(UPSTREAM_PATH, () => HttpResponse.error()));
+
+      const text = await (await GET(requestFor('?prefCode=13'))).text();
+
+      expect(text).not.toContain('fetch');
+      expect(text).not.toContain('CERT');
+      expect(text).not.toContain(UPSTREAM_BASE_URL);
+    });
+  });
+
   describe('上流のエラー', () => {
     it.each([403, 404, 500])('上流の %i をそのまま返さず 502 に正規化する', async (status) => {
       vi.spyOn(console, 'error').mockImplementation(() => undefined);

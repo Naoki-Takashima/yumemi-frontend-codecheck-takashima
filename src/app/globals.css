@@ -1,0 +1,223 @@
+/*
+ * デザイントークンとリセット。
+ */
+
+:root {
+  /* ------------------------------------------------------------------
+   * 色
+   * 本文・リンク・エラーはいずれも背景に対して 4.5:1 以上（WCAG AA）。
+   * UI 部品の輪郭は 3:1 以上（WCAG 1.4.11）を満たす border-strong を使う。
+   * ------------------------------------------------------------------ */
+  --color-bg: #fff;
+  --color-surface: #f6f7f9;
+  --color-text: #181c22; /* 対 bg 17.10:1 */
+  --color-text-muted: #5b6472; /* 対 bg 5.98:1 / 対 surface 5.58:1 */
+  --color-accent: #1361c4; /* 対 bg 5.94:1 */
+  --color-accent-strong: #0f4c9a; /* 対 bg 8.33:1 */
+  --color-accent-subtle: #eaf1fb;
+  --color-danger: #c22a20; /* 対 bg 5.76:1 */
+  --color-danger-subtle: #fdeceb;
+  --color-on-accent: #fff; /* 対 accent 5.94:1 */
+
+  /* 装飾的な区切り線。テキストや操作部品の輪郭には使わない */
+  --color-border: #e2e5ea;
+
+  /* チェックボックスや入力欄の輪郭。対 bg 4.10:1 */
+  --color-border-strong: #767e8b;
+
+  /* ------------------------------------------------------------------
+   * 間隔（4px 基準）
+   * ------------------------------------------------------------------ */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.5rem; /* 24px */
+  --space-6: 2rem; /* 32px */
+  --space-7: 3rem; /* 48px */
+  --space-8: 4rem; /* 64px */
+
+  /* ------------------------------------------------------------------
+   * タイポグラフィ
+   * 見出しは clamp で画面幅に追従させ、メディアクエリを増やさない。
+   * ------------------------------------------------------------------ */
+  --font-family-base:
+    system-ui, -apple-system, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', meiryo,
+    sans-serif;
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: clamp(1.25rem, 1.1rem + 0.7vw, 1.5rem);
+  --font-size-2xl: clamp(1.5rem, 1.2rem + 1.4vw, 2rem);
+  --line-height-tight: 1.3;
+  --line-height-base: 1.7;
+
+  /* ------------------------------------------------------------------
+   * 角丸・影
+   * ------------------------------------------------------------------ */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --shadow-sm: 0 1px 2px rgb(24 28 34 / 8%);
+  --shadow-md: 0 2px 8px rgb(24 28 34 / 10%);
+
+  /* ------------------------------------------------------------------
+   * その他
+   * ------------------------------------------------------------------ */
+  --focus-ring-width: 3px;
+  --transition-fast: 120ms ease;
+
+  /* タッチ操作の最小ターゲットサイズ */
+  --tap-target-min: 2.75rem; /* 44px */
+
+  /* 本文の最大幅 */
+  --layout-max-width: 75rem; /* 1200px */
+}
+
+/*
+ * ブレークポイント（CSS 変数はメディアクエリで使えないため、値をここに記す）
+ *   スマートフォン    〜767px
+ *   タブレット      768px〜1279px
+ *   デスクトップ    1280px〜
+ * 実際のレイアウトは grid の auto-fill を優先し、
+ * メディアクエリは必要な箇所だけに絞る。
+ */
+
+/* ====================================================================
+ * リセット
+ * ==================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* 余白は各コンポーネントが明示的に指定する */
+* {
+  margin: 0;
+}
+
+html {
+  /* rem の基準をブラウザ設定に委ねる（文字サイズ変更を妨げない） */
+  font-size: 100%;
+
+  /* ページ内リンクでの移動を滑らかにする */
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100dvh;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 見出しは行間を詰め、長い語の折り返しを許す */
+h1,
+h2,
+h3,
+h4 {
+  font-size: inherit;
+  font-weight: 700;
+  line-height: var(--line-height-tight);
+  overflow-wrap: break-word;
+}
+
+img,
+picture,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+/* フォーム部品はフォントを継承しないため明示する */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* fieldset の既定の枠と余白は使わない */
+fieldset {
+  padding: 0;
+  border: none;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: var(--color-accent);
+}
+
+/* ====================================================================
+ * フォーカス
+ * ==================================================================== */
+
+/*
+ * キーボード操作時だけ輪郭を出す。
+ * マウス操作では出ないが、フォーカスは常にどこかに存在する。
+ */
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ====================================================================
+ * ユーティリティ
+ * ==================================================================== */
+
+/*
+ * 視覚的には隠すが、スクリーンリーダーには読ませる。
+ * グラフの内容を文章で補足する用途で使う。
+ */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ====================================================================
+ * 動きの抑制
+ * ==================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

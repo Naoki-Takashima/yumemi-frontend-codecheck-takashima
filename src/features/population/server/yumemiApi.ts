@@ -19,17 +19,17 @@ const PREFECTURES_REVALIDATE_SECONDS = 60 * 60 * 24;
 /** 人口構成は年次データのため、そこそこ長く保持する（秒）。 */
 const POPULATION_REVALIDATE_SECONDS = 60 * 60;
 
-/** 上流 API が 2xx 以外を返したことを表す。 */
+/** コーディング試験 API が 2xx 以外を返したことを表す。 */
 export class UpstreamApiError extends Error {
   constructor(readonly status: number) {
-    super(`上流 API が ${status} を返しました`);
+    super(`コーディング試験 API が ${status} を返しました`);
     this.name = 'UpstreamApiError';
   }
 }
 
 export class UpstreamSchemaError extends Error {
   constructor(readonly issues: unknown) {
-    super('上流 API のレスポンスが想定した形式ではありません');
+    super('コーディング試験 API のレスポンスが想定した形式ではありません');
     this.name = 'UpstreamSchemaError';
   }
 }
@@ -38,6 +38,12 @@ export class MissingApiKeyError extends Error {
   constructor() {
     super('環境変数 YUMEMI_API_KEY が設定されていません');
     this.name = 'MissingApiKeyError';
+  }
+}
+export class UpstreamUnreachableError extends Error {
+  constructor(override readonly cause: unknown) {
+    super('コーディング試験 API へ到達できませんでした');
+    this.name = 'UpstreamUnreachableError';
   }
 }
 
@@ -70,10 +76,18 @@ async function requestUpstream<T>(
     url.searchParams.set(key, value);
   }
 
-  const response = await fetch(url, {
-    headers: { 'X-API-KEY': getApiKey() },
-    next: { revalidate: options.revalidateSeconds },
-  });
+  const apiKey = getApiKey();
+
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      headers: { 'X-API-KEY': apiKey },
+      next: { revalidate: options.revalidateSeconds },
+    });
+  } catch (error) {
+    throw new UpstreamUnreachableError(error);
+  }
 
   if (!response.ok) {
     throw new UpstreamApiError(response.status);

@@ -2,6 +2,7 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 import tseslint from 'typescript-eslint';
+import storybook from 'eslint-plugin-storybook';
 import prettier from 'eslint-config-prettier/flat';
 
 const eslintConfig = defineConfig([
@@ -14,10 +15,16 @@ const eslintConfig = defineConfig([
     // 追加
     'node_modules/**',
     'coverage/**',
+    'storybook-static/**',
+    // MSW が生成する Service Worker。手で編集しない
+    'public/mockServiceWorker.js',
   ]),
 
   ...nextVitals,
   ...nextTs,
+
+  // ストーリーの書き方の誤りを検出する
+  ...storybook.configs['flat/recommended'],
 
   // 型情報を使うルール。Promise の投げっぱなしなど、構文だけでは気付けない問題を拾う。
   {

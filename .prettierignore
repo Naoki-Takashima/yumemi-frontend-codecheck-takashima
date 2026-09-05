@@ -3,6 +3,10 @@ out
 build
 coverage
 node_modules
+storybook-static
+
+# MSW が生成する Service Worker。原文のまま保持する
+public/mockServiceWorker.js
 package-lock.json
 next-env.d.ts
 
