@@ -1,17 +1,24 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PopulationDashboard } from '@/features/population/components/PopulationDashboard';
 import { MAX_SELECTABLE_PREFECTURES } from '@/features/population/constants';
 import { createPopulationFixture } from '@/test/fixtures/population';
 import { prefecturesFixture } from '@/test/fixtures/prefectures';
+import { nextNavigationMock, replaceCalls } from '@/test/mockNextNavigation';
 import { server } from '@/test/msw/server';
 import { renderWithProviders } from '@/test/renderWithProviders';
 
 // vi.mock はファイル先頭へ巻き上げられるため、
 // ファクトリの中では import 済みの変数を参照できない。動的に読み込む。
+vi.mock('next/navigation', async () => {
+  const { createNextNavigationMock } = await import('@/test/mockNextNavigation');
+
+  return createNextNavigationMock();
+});
+
 vi.mock('recharts', async () => {
   const actual = await vi.importActual<typeof import('recharts')>('recharts');
   const { MockResponsiveContainer } = await import('@/test/mockResponsiveContainer');
@@ -20,6 +27,10 @@ vi.mock('recharts', async () => {
 });
 
 describe('PopulationDashboard', () => {
+  beforeEach(() => {
+    nextNavigationMock.reset();
+  });
+
   async function renderAndWait() {
     const user = userEvent.setup();
     renderWithProviders(<PopulationDashboard />);
@@ -74,6 +85,111 @@ describe('PopulationDashboard', () => {
 
     expect(screen.getByText(/0 \/ 10 件選択中/)).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: '東京都' })).not.toBeChecked();
+  });
+
+  describe('URL との同期', () => {
+    it('都道府県を選ぶと URL に載る', async () => {
+      const { user } = await renderAndWait();
+
+      await user.click(screen.getByRole('checkbox', { name: '東京都' }));
+
+      expect(nextNavigationMock.search).toBe('prefCodes=13');
+    });
+
+    it('複数選んだ順に URL へ並ぶ', async () => {
+      const { user } = await renderAndWait();
+
+      await user.click(screen.getByRole('checkbox', { name: '大阪府' }));
+      await user.click(screen.getByRole('checkbox', { name: '東京都' }));
+
+      expect(nextNavigationMock.search).toBe('prefCodes=27%2C13');
+    });
+
+    it('人口種別も URL に載る', async () => {
+      const { user } = await renderAndWait();
+
+      await user.click(screen.getByRole('tab', { name: '年少人口' }));
+
+      expect(nextNavigationMock.search).toBe('type=young');
+    });
+
+    it('既定の総人口に戻すと URL から消える', async () => {
+      const { user } = await renderAndWait();
+
+      await user.click(screen.getByRole('tab', { name: '年少人口' }));
+      await user.click(screen.getByRole('tab', { name: '総人口' }));
+
+      expect(nextNavigationMock.search).toBe('');
+    });
+
+    it('すべて解除すると URL から消える', async () => {
+      const { user } = await renderAndWait();
+
+      await user.click(screen.getByRole('checkbox', { name: '東京都' }));
+      await user.click(screen.getByRole('button', { name: 'すべて解除' }));
+
+      expect(nextNavigationMock.search).toBe('');
+    });
+
+    it('履歴を積まずに置き換える', async () => {
+      const { user } = await renderAndWait();
+
+      await user.click(screen.getByRole('checkbox', { name: '東京都' }));
+
+      // push だと選択のたびに履歴が増え、戻るボタンで画面を離れられなくなる
+      expect(replaceCalls).toEqual(['/?prefCodes=13']);
+    });
+  });
+
+  describe('URL からの復元', () => {
+    it('選択済みの都道府県が復元される', async () => {
+      nextNavigationMock.reset('prefCodes=13,27');
+
+      await renderAndWait();
+
+      expect(screen.getByRole('checkbox', { name: '東京都' })).toBeChecked();
+      expect(screen.getByRole('checkbox', { name: '大阪府' })).toBeChecked();
+      expect(screen.getByText(/2 \/ 10 件選択中/)).toBeInTheDocument();
+    });
+
+    it('人口種別が復元される', async () => {
+      nextNavigationMock.reset('type=elderly');
+
+      await renderAndWait();
+
+      expect(screen.getByRole('tab', { name: '老年人口' })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      );
+    });
+
+    it('復元した状態でグラフが描画される', async () => {
+      nextNavigationMock.reset('prefCodes=13&type=young');
+
+      await renderAndWait();
+
+      expect(await screen.findByText(/年少人口の推移/)).toHaveTextContent('東京都');
+    });
+
+    it('不正な値は無視して画面を出す', async () => {
+      nextNavigationMock.reset('prefCodes=999,abc,13&type=unknown');
+
+      await renderAndWait();
+
+      expect(screen.getByRole('checkbox', { name: '東京都' })).toBeChecked();
+      expect(screen.getByText(/1 \/ 10 件選択中/)).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: '総人口' })).toHaveAttribute('aria-selected', 'true');
+    });
+
+    it('上限を超える指定は切り捨てる', async () => {
+      // URL 経由で上限を超えられては、制限した意味がなくなる
+      const codes = Array.from({ length: 20 }, (_, index) => index + 1);
+      nextNavigationMock.reset(`prefCodes=${codes.join(',')}`);
+
+      await renderAndWait();
+
+      expect(screen.getByText(/10 \/ 10 件選択中/)).toBeInTheDocument();
+    });
   });
 
   describe('選択できる上限', () => {

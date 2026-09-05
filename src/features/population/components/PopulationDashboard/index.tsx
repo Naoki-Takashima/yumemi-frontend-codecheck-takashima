@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-
 import { PopulationChart } from '@/features/population/components/PopulationChart';
 import styles from '@/features/population/components/PopulationDashboard/PopulationDashboard.module.css';
 import {
@@ -10,10 +8,10 @@ import {
   tabPanelId,
 } from '@/features/population/components/PopulationTypeTabs';
 import { PrefectureSelector } from '@/features/population/components/PrefectureSelector';
-import { MAX_SELECTABLE_PREFECTURES } from '@/features/population/constants';
+import { useChartSelection } from '@/features/population/hooks/useChartSelection';
 import { usePopulations } from '@/features/population/hooks/usePopulations';
 import { usePrefectures } from '@/features/population/hooks/usePrefectures';
-import { DEFAULT_POPULATION_TYPE, type PopulationType } from '@/features/population/types';
+import type { Prefecture } from '@/features/population/types';
 import { ErrorState } from '@/shared/components/ErrorState';
 import { Spinner } from '@/shared/components/Spinner';
 
@@ -22,40 +20,29 @@ import { Spinner } from '@/shared/components/Spinner';
  */
 export function PopulationDashboard() {
   const prefecturesQuery = usePrefectures();
-
-  const [selectedCodes, setSelectedCodes] = useState<number[]>([]);
-  const [populationType, setPopulationType] = useState<PopulationType>(DEFAULT_POPULATION_TYPE);
+  const selection = useChartSelection();
 
   const prefectures = prefecturesQuery.data ?? [];
-  const selectedPrefectures = prefectures.filter((prefecture) =>
-    selectedCodes.includes(prefecture.prefCode),
+
+  /**
+   * 選択された都道府県を URL に書かれた順で取り出す。
+   */
+  const prefectureByCode = new Map(
+    prefectures.map((prefecture) => [prefecture.prefCode, prefecture]),
   );
+  const selectedPrefectures = selection.prefCodes
+    .map((prefCode) => prefectureByCode.get(prefCode))
+    .filter((prefecture): prefecture is Prefecture => prefecture !== undefined);
 
   const populations = usePopulations(selectedPrefectures);
-
-  const toggle = (prefCode: number) => {
-    setSelectedCodes((current) => {
-      if (current.includes(prefCode)) {
-        return current.filter((code) => code !== prefCode);
-      }
-
-      if (current.length >= MAX_SELECTABLE_PREFECTURES) {
-        return current;
-      }
-
-      return [...current, prefCode];
-    });
-  };
 
   return (
     <div className={styles.dashboard}>
       <PrefectureSelector
         prefectures={prefectures}
-        selectedCodes={selectedCodes}
-        onToggle={toggle}
-        onClear={() => {
-          setSelectedCodes([]);
-        }}
+        selectedCodes={selection.prefCodes}
+        onToggle={selection.togglePrefecture}
+        onClear={selection.clearPrefectures}
         isLoading={prefecturesQuery.isPending}
         isError={prefecturesQuery.isError}
         onRetry={() => {
@@ -64,13 +51,13 @@ export function PopulationDashboard() {
       />
 
       <section className={styles.chartSection}>
-        <PopulationTypeTabs value={populationType} onChange={setPopulationType} />
+        <PopulationTypeTabs value={selection.type} onChange={selection.setType} />
 
         <div
           className={styles.tabpanel}
           role="tabpanel"
-          id={tabPanelId(populationType)}
-          aria-labelledby={tabId(populationType)}
+          id={tabPanelId(selection.type)}
+          aria-labelledby={tabId(selection.type)}
           tabIndex={0}
         >
           {populations.failedPrefNames.length > 0 && (
@@ -80,7 +67,7 @@ export function PopulationDashboard() {
             />
           )}
 
-          {selectedCodes.length === 0 ? (
+          {selection.prefCodes.length === 0 ? (
             <p className={styles.empty}>都道府県を選択すると、人口の推移を表示します。</p>
           ) : populations.isEmpty && populations.isFetching ? (
             <p className={styles.loading}>
@@ -88,7 +75,7 @@ export function PopulationDashboard() {
               人口データを読み込んでいます
             </p>
           ) : (
-            <PopulationChart entries={populations.entries} type={populationType} />
+            <PopulationChart entries={populations.entries} type={selection.type} />
           )}
         </div>
       </section>
