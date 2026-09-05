@@ -5,6 +5,7 @@ import {
   MissingApiKeyError,
   UpstreamApiError,
   UpstreamSchemaError,
+  UpstreamUnreachableError,
 } from '@/features/population/server/yumemiApi';
 import type { ApiErrorBody } from '@/shared/api/contract';
 
@@ -25,6 +26,11 @@ export function errorResponse(
 export function toErrorResponse(error: unknown): NextResponse<PopulationErrorBody> {
   if (error instanceof MissingApiKeyError) {
     console.error('[api] API キーが未設定です', error);
+    return errorResponse('UPSTREAM_UNAVAILABLE', RETRYABLE_MESSAGE, 503);
+  }
+
+  if (error instanceof UpstreamUnreachableError) {
+    console.error('[api] 上流 API へ到達できませんでした', error.cause);
     return errorResponse('UPSTREAM_UNAVAILABLE', RETRYABLE_MESSAGE, 503);
   }
 
