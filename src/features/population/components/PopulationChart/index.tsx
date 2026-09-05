@@ -54,7 +54,11 @@ export function PopulationChart({ entries, type }: PopulationChartProps) {
 
       <div className={styles.chart} aria-hidden="true">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={rows} margin={{ top: 8, right: 16, bottom: 24, left: 16 }}>
+          <LineChart
+            data={rows}
+            margin={{ top: 8, right: 16, bottom: 24, left: 16 }}
+            accessibilityLayer={false}
+          >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
 
             <XAxis dataKey="year" tickMargin={8}>
@@ -72,7 +76,7 @@ export function PopulationChart({ entries, type }: PopulationChartProps) {
 
             {hasEstimate && (
               <ReferenceLine x={boundaryYear} stroke="currentColor" strokeDasharray="4 4">
-                <Label value="これ以降は推計値" position="insideTopRight" fontSize={12} />
+                <Label value="これ以降は推計値" position="insideTopRight" />
               </ReferenceLine>
             )}
 

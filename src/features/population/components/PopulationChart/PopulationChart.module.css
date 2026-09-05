@@ -23,6 +23,7 @@
 }
 
 .chart :global(.recharts-cartesian-axis-tick-value),
+.chart :global(.recharts-label),
 .chart :global(.recharts-legend-item-text) {
   fill: var(--color-text-muted);
   color: var(--color-text-muted);

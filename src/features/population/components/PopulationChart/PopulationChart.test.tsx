@@ -25,6 +25,27 @@ describe('PopulationChart', () => {
     });
   });
 
+  describe('支援技術からの見え方', () => {
+    it('図の中にフォーカスできる要素を残さない', () => {
+      const { container } = render(
+        <PopulationChart entries={[entry(13, '東京都')]} type="total" />,
+      );
+
+      const hidden = container.querySelector('[aria-hidden="true"]');
+      const focusable = hidden?.querySelectorAll(
+        'a[href], button, input, [tabindex]:not([tabindex="-1"])',
+      );
+
+      expect(focusable).toHaveLength(0);
+    });
+
+    it('図の内容を文章でも伝える', () => {
+      render(<PopulationChart entries={[entry(13, '東京都')]} type="total" />);
+
+      expect(screen.getByText(/総人口の推移/)).toHaveTextContent('東京都');
+    });
+  });
+
   describe('凡例', () => {
     it('選択した都道府県を並べる', () => {
       render(<PopulationChart entries={[entry(13, '東京都'), entry(27, '大阪府')]} type="total" />);
