@@ -48,3 +48,7 @@ jobs:
       # API キーは実行時にしか読まないため、ビルドに環境変数は不要
       - name: ビルド
         run: npm run build
+
+      # ストーリーが壊れたまま main に入るのを防ぐ
+      - name: Storybook のビルド
+        run: npm run build-storybook
