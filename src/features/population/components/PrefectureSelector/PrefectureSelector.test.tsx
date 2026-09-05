@@ -150,16 +150,16 @@ describe('PrefectureSelector', () => {
       expect(screen.getByRole('checkbox', { name: '北海道' })).toBeEnabled();
     });
 
-    it('上限に達したら理由を伝える', () => {
+    it('上限に達したら、次にとるべき操作を伝える', () => {
       setup({ selectedCodes: fullSelection });
 
-      expect(screen.getByText(/上限です/)).toBeInTheDocument();
+      expect(screen.getByText(/いずれかの選択を外してください/)).toBeInTheDocument();
     });
 
-    it('上限に達していなければ理由は出さない', () => {
+    it('上限に達していなければ案内は出さない', () => {
       setup({ selectedCodes: fullSelection.slice(0, 9) });
 
-      expect(screen.queryByText(/上限です/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/いずれかの選択を外してください/)).not.toBeInTheDocument();
     });
 
     it('無効なチェックボックスは押しても onToggle が呼ばれない', async () => {
