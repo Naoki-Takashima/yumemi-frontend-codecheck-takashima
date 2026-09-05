@@ -10,6 +10,7 @@ import {
   tabPanelId,
 } from '@/features/population/components/PopulationTypeTabs';
 import { PrefectureSelector } from '@/features/population/components/PrefectureSelector';
+import { MAX_SELECTABLE_PREFECTURES } from '@/features/population/constants';
 import { usePopulations } from '@/features/population/hooks/usePopulations';
 import { usePrefectures } from '@/features/population/hooks/usePrefectures';
 import { DEFAULT_POPULATION_TYPE, type PopulationType } from '@/features/population/types';
@@ -33,11 +34,17 @@ export function PopulationDashboard() {
   const populations = usePopulations(selectedPrefectures);
 
   const toggle = (prefCode: number) => {
-    setSelectedCodes((current) =>
-      current.includes(prefCode)
-        ? current.filter((code) => code !== prefCode)
-        : [...current, prefCode],
-    );
+    setSelectedCodes((current) => {
+      if (current.includes(prefCode)) {
+        return current.filter((code) => code !== prefCode);
+      }
+
+      if (current.length >= MAX_SELECTABLE_PREFECTURES) {
+        return current;
+      }
+
+      return [...current, prefCode];
+    });
   };
 
   return (
