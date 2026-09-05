@@ -41,7 +41,6 @@ export class MissingApiKeyError extends Error {
   }
 }
 
-
 function getApiKey(): string {
   const apiKey = process.env.YUMEMI_API_KEY;
 
