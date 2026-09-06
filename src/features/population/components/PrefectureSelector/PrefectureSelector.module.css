@@ -33,7 +33,8 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  grid-template-columns: repeat(auto-fill,
+        minmax(min(8.5rem, (100% - var(--space-1) * 2) / 3), 1fr));
   gap: var(--space-1);
 }
 
@@ -96,5 +97,19 @@
 @keyframes pulse {
   50% {
     opacity: 0.25;
+  }
+}
+
+@media (width <=767px) {
+  .grid {
+    max-height: calc(var(--scroll-area-max-height) + var(--space-2) * 2);
+    padding: var(--space-2);
+    margin-inline: calc(var(--space-2) * -1);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .item {
+    padding-inline: var(--space-1);
   }
 }
