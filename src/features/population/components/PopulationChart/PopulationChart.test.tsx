@@ -64,6 +64,27 @@ describe('PopulationChart', () => {
       expect(screen.getByText('東京都')).toBeInTheDocument();
       expect(screen.getByText('大阪府')).toBeInTheDocument();
     });
+
+    it('選択した順ではなく都道府県コードの昇順で並べる', () => {
+      // Recharts の既定（県名の文字コード順）だと 京都府 → 北海道 → 大阪府 → 沖縄県 になる
+      const { container } = render(
+        <PopulationChart
+          entries={[
+            entry(47, '沖縄県'),
+            entry(26, '京都府'),
+            entry(1, '北海道'),
+            entry(27, '大阪府'),
+          ]}
+          type="total"
+        />,
+      );
+
+      const legend = [...container.querySelectorAll('.recharts-legend-item-text')].map(
+        (node) => node.textContent,
+      );
+
+      expect(legend).toEqual(['北海道', '京都府', '大阪府', '沖縄県']);
+    });
   });
 
   describe('推計値の扱い', () => {

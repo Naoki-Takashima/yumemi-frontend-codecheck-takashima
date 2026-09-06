@@ -30,7 +30,11 @@ function buildStyleMap(entries: PopulationEntry[]) {
   return new Map(
     entries.map((entry) => [
       entry.prefName,
-      { color: seriesColor(entry.prefCode), shape: seriesShape(entry.prefCode) },
+      {
+        prefCode: entry.prefCode,
+        color: seriesColor(entry.prefCode),
+        shape: seriesShape(entry.prefCode),
+      },
     ]),
   );
 }
@@ -107,7 +111,13 @@ export function PopulationChart({ entries, type }: PopulationChartProps) {
               }}
             />
 
-            <Legend verticalAlign="top" wrapperStyle={{ paddingLeft: AXIS_LABEL_RESERVE }} />
+            <Legend
+              verticalAlign="top"
+              wrapperStyle={{ paddingLeft: AXIS_LABEL_RESERVE }}
+              itemSorter={(item) =>
+                seriesStyles.get(String(item.value))?.prefCode ?? Number.MAX_SAFE_INTEGER
+              }
+            />
 
             {prefNames.map((prefName) => {
               const style = seriesStyles.get(prefName);
