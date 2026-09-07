@@ -62,7 +62,7 @@ export function PopulationChart({ entries, type }: PopulationChartProps) {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={rows}
-            margin={{ top: 8, right: 16, bottom: 24, left: 16 }}
+            margin={{ top: 8, right: 16, bottom: 24, left: 0 }}
             accessibilityLayer={false}
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -71,7 +71,7 @@ export function PopulationChart({ entries, type }: PopulationChartProps) {
               <Label value="年度" position="insideBottomRight" offset={-16} />
             </XAxis>
 
-            <YAxis tickFormatter={formatPopulationShort} width={72}>
+            <YAxis tickFormatter={formatPopulationShort} width={60}>
               <Label value="人口数" position="insideTopLeft" dy={-AXIS_LABEL_RISE} />
             </YAxis>
 
