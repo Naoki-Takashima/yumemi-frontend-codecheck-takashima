@@ -9,6 +9,7 @@ const meta = {
   component: PopulationDashboard,
   parameters: {
     layout: 'padded',
+    nextjs: { appDirectory: true },
     docs: {
       description: {
         component: [
