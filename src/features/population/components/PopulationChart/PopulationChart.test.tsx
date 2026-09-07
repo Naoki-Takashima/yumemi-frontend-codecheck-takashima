@@ -25,12 +25,65 @@ describe('PopulationChart', () => {
     });
   });
 
+  describe('支援技術からの見え方', () => {
+    it('図の中にフォーカスできる要素を残さない', () => {
+      const { container } = render(
+        <PopulationChart entries={[entry(13, '東京都')]} type="total" />,
+      );
+
+      const hidden = container.querySelector('[aria-hidden="true"]');
+      const focusable = hidden?.querySelectorAll(
+        'a[href], button, input, [tabindex]:not([tabindex="-1"])',
+      );
+
+      expect(focusable).toHaveLength(0);
+    });
+
+    it('図の内容を文章でも伝える', () => {
+      render(<PopulationChart entries={[entry(13, '東京都')]} type="total" />);
+
+      expect(screen.getByText(/総人口の推移/)).toHaveTextContent('東京都');
+    });
+  });
+
+  describe('軸のラベル', () => {
+    it('縦軸と横軸の名前を出す', () => {
+      const { container } = render(
+        <PopulationChart entries={[entry(13, '東京都')]} type="total" />,
+      );
+
+      expect(container.textContent).toContain('人口数');
+      expect(container.textContent).toContain('年度');
+    });
+  });
+
   describe('凡例', () => {
     it('選択した都道府県を並べる', () => {
       render(<PopulationChart entries={[entry(13, '東京都'), entry(27, '大阪府')]} type="total" />);
 
       expect(screen.getByText('東京都')).toBeInTheDocument();
       expect(screen.getByText('大阪府')).toBeInTheDocument();
+    });
+
+    it('選択した順ではなく都道府県コードの昇順で並べる', () => {
+      // Recharts の既定（県名の文字コード順）だと 京都府 → 北海道 → 大阪府 → 沖縄県 になる
+      const { container } = render(
+        <PopulationChart
+          entries={[
+            entry(47, '沖縄県'),
+            entry(26, '京都府'),
+            entry(1, '北海道'),
+            entry(27, '大阪府'),
+          ]}
+          type="total"
+        />,
+      );
+
+      const legend = [...container.querySelectorAll('.recharts-legend-item-text')].map(
+        (node) => node.textContent,
+      );
+
+      expect(legend).toEqual(['北海道', '京都府', '大阪府', '沖縄県']);
     });
   });
 
@@ -41,12 +94,14 @@ describe('PopulationChart', () => {
       expect(screen.getByText(/2020 年より後の値は推計値です/)).toBeInTheDocument();
     });
 
-    it('グラフ上にも境界を示すラベルを描く', () => {
+    it('グラフの中には境界線を引かない', () => {
+      // 推計値であることは注記とツールチップで伝える
       const { container } = render(
         <PopulationChart entries={[entry(13, '東京都')]} type="total" />,
       );
 
-      expect(container.textContent).toContain('これ以降は推計値');
+      expect(container.querySelector('.recharts-reference-line')).toBeNull();
+      expect(container.textContent).not.toContain('これ以降は推計値');
     });
 
     it('推計値の年を含まないデータには注記を出さない', () => {

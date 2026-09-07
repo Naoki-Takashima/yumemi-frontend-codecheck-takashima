@@ -37,3 +37,32 @@
   background-color: var(--color-accent-strong);
   border-color: var(--color-accent-strong);
 }
+
+/*
+ * 文字だけの見た目。囲みのボタンより弱い操作に使う。
+ * 高さは 24px を下回らせない。指では狭すぎて押しにくくなる（WCAG 2.5.8）。
+ */
+.link {
+  min-height: 0;
+  padding: var(--space-1) 0;
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+}
+
+/*
+ * 共通の :disabled は透過で薄くしているが、
+ * それだと文字が背景に溶けて読めなくなる。灰色で示す。
+ */
+.link:disabled {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  opacity: 1;
+}
+
+.link:hover:not(:disabled) {
+  color: var(--color-accent-strong);
+}

@@ -1,4 +1,10 @@
+.chartScroll {
+  overflow: auto hidden;
+  overscroll-behavior-x: contain;
+}
+
 .chart {
+  min-width: var(--chart-min-width);
   height: clamp(18rem, 50vh, 32rem);
 }
 
@@ -23,6 +29,7 @@
 }
 
 .chart :global(.recharts-cartesian-axis-tick-value),
+.chart :global(.recharts-label),
 .chart :global(.recharts-legend-item-text) {
   fill: var(--color-text-muted);
   color: var(--color-text-muted);
@@ -31,10 +38,6 @@
 
 .chart :global(.recharts-cartesian-grid line) {
   stroke: var(--color-border);
-}
-
-.chart :global(.recharts-reference-line-line) {
-  stroke: var(--color-text-muted);
 }
 
 .tooltip {

@@ -1,6 +1,6 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PopulationDashboard } from '@/features/population/components/PopulationDashboard';
@@ -316,6 +316,33 @@ describe('PopulationDashboard', () => {
       expect(screen.getByText(/都道府県を選択すると/)).toBeInTheDocument();
     });
 
+    it('追加分を待つ間も、取得済みのグラフは消さない', async () => {
+      server.use(
+        http.get('*/api/population', async ({ request }) => {
+          const prefCode = new URL(request.url).searchParams.get('prefCode');
+
+          // 大阪府（27）だけ応答を返さず、待っている状態を作る
+          if (prefCode === '27') {
+            await delay('infinite');
+          }
+
+          return HttpResponse.json({ result: createPopulationFixture(Number(prefCode)) });
+        }),
+      );
+
+      const { user } = await renderAndWait();
+
+      await user.click(screen.getByRole('checkbox', { name: '東京都' }));
+      await screen.findByText(/総人口の推移/);
+
+      await user.click(screen.getByRole('checkbox', { name: '大阪府' }));
+
+      // 東京都のグラフは消えず、そのまま残る
+      expect(screen.getByText(/総人口の推移/)).toHaveTextContent('東京都');
+      // 読み込み中の表示は重ねない。取得が速いと一瞬で消え、ちらつくだけになる
+      expect(screen.queryByText('読み込んでいます')).not.toBeInTheDocument();
+    });
+
     it('一部の県だけ失敗しても、取れた分は表示する', async () => {
       server.use(
         http.get('*/api/population', ({ request }) => {
@@ -342,6 +369,27 @@ describe('PopulationDashboard', () => {
       expect(await screen.findByText(/総人口の推移/)).toHaveTextContent('東京都');
       // 失敗した大阪府だけを知らせる
       expect(await screen.findByRole('alert')).toHaveTextContent('大阪府');
+    });
+  });
+
+  describe('読み上げ用の状況説明', () => {
+    it('選択前から置かれている', async () => {
+      // 必要になってから差し込むと、支援技術が変化に気づかないことがある
+      await renderAndWait();
+
+      expect(screen.getByRole('status')).toHaveTextContent('都道府県は選択されていません');
+    });
+
+    it('表示できたら件数を伝える', async () => {
+      const { user } = await renderAndWait();
+
+      await user.click(screen.getByRole('checkbox', { name: '東京都' }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('status')).toHaveTextContent(
+          '1 件の都道府県をグラフに表示しています',
+        );
+      });
     });
   });
 

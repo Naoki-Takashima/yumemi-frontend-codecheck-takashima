@@ -6,7 +6,6 @@ import {
   Legend,
   Line,
   LineChart,
-  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -16,6 +15,7 @@ import {
 import styles from '@/features/population/components/PopulationChart/PopulationChart.module.css';
 import { formatPopulation, formatPopulationShort } from '@/features/population/lib/formatNumber';
 import { seriesColor, seriesShape } from '@/features/population/lib/seriesColor';
+import { sortByPopulationDesc } from '@/features/population/lib/sortTooltipItems';
 import { toChartSeries, type PopulationEntry } from '@/features/population/lib/toChartSeries';
 import { POPULATION_TYPE_LABELS, type PopulationType } from '@/features/population/types';
 
@@ -24,11 +24,18 @@ type PopulationChartProps = {
   type: PopulationType;
 };
 
+const AXIS_LABEL_RISE = 32;
+const AXIS_LABEL_RESERVE = 56;
+
 function buildStyleMap(entries: PopulationEntry[]) {
   return new Map(
     entries.map((entry) => [
       entry.prefName,
-      { color: seriesColor(entry.prefCode), shape: seriesShape(entry.prefCode) },
+      {
+        prefCode: entry.prefCode,
+        color: seriesColor(entry.prefCode),
+        shape: seriesShape(entry.prefCode),
+      },
     ]),
   );
 }
@@ -52,89 +59,90 @@ export function PopulationChart({ entries, type }: PopulationChartProps) {
         {hasEstimate && `${String(boundaryYear)} 年より後は推計値。`}
       </p>
 
-      <div className={styles.chart} aria-hidden="true">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={rows} margin={{ top: 8, right: 16, bottom: 24, left: 16 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+      <div className={styles.chartScroll} aria-hidden="true">
+        <div className={styles.chart}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={rows}
+              margin={{ top: 8, right: 16, bottom: 24, left: 0 }}
+              accessibilityLayer={false}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
 
-            <XAxis dataKey="year" tickMargin={8}>
-              <Label value="年度" position="insideBottomRight" offset={-16} />
-            </XAxis>
+              <XAxis dataKey="year" tickMargin={8}>
+                <Label value="年度" position="insideBottomRight" offset={-16} />
+              </XAxis>
 
-            <YAxis tickFormatter={formatPopulationShort} width={72}>
-              <Label
-                value="人口数"
-                angle={-90}
-                position="insideLeft"
-                style={{ textAnchor: 'middle' }}
+              <YAxis tickFormatter={formatPopulationShort} width={60}>
+                <Label value="人口数" position="insideTopLeft" dy={-AXIS_LABEL_RISE} />
+              </YAxis>
+
+              <Tooltip
+                content={({ active, payload, label }) => {
+                  if (!active || !payload?.length) {
+                    return null;
+                  }
+
+                  const year = Number(label);
+
+                  return (
+                    <div className={styles.tooltip}>
+                      <p className={styles.tooltipYear}>{year} 年</p>
+                      <div className={styles.tooltipList}>
+                        {sortByPopulationDesc(payload).map((item) => (
+                          <div key={String(item.dataKey)} className={styles.tooltipItem}>
+                            <span className={styles.tooltipName}>
+                              <span
+                                className={styles.tooltipSwatch}
+                                style={{ backgroundColor: item.color }}
+                                aria-hidden="true"
+                              />
+                              {item.name}
+                            </span>
+                            <span className={styles.tooltipValue}>
+                              {formatPopulation(Number(item.value))}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      {boundaryYear !== null && year > boundaryYear && (
+                        <p className={styles.tooltipEstimate}>推計値</p>
+                      )}
+                    </div>
+                  );
+                }}
               />
-            </YAxis>
 
-            {hasEstimate && (
-              <ReferenceLine x={boundaryYear} stroke="currentColor" strokeDasharray="4 4">
-                <Label value="これ以降は推計値" position="insideTopRight" fontSize={12} />
-              </ReferenceLine>
-            )}
-
-            <Tooltip
-              content={({ active, payload, label }) => {
-                if (!active || !payload?.length) {
-                  return null;
+              <Legend
+                verticalAlign="top"
+                wrapperStyle={{ paddingLeft: AXIS_LABEL_RESERVE }}
+                itemSorter={(item) =>
+                  seriesStyles.get(String(item.value))?.prefCode ?? Number.MAX_SAFE_INTEGER
                 }
+              />
 
-                const year = Number(label);
+              {prefNames.map((prefName) => {
+                const style = seriesStyles.get(prefName);
 
                 return (
-                  <div className={styles.tooltip}>
-                    <p className={styles.tooltipYear}>{year} 年</p>
-                    <div className={styles.tooltipList}>
-                      {payload.map((item) => (
-                        <div key={String(item.dataKey)} className={styles.tooltipItem}>
-                          <span className={styles.tooltipName}>
-                            <span
-                              className={styles.tooltipSwatch}
-                              style={{ backgroundColor: item.color }}
-                              aria-hidden="true"
-                            />
-                            {item.name}
-                          </span>
-                          <span className={styles.tooltipValue}>
-                            {formatPopulation(Number(item.value))}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                    {boundaryYear !== null && year > boundaryYear && (
-                      <p className={styles.tooltipEstimate}>推計値</p>
-                    )}
-                  </div>
+                  <Line
+                    key={prefName}
+                    type="monotone"
+                    dataKey={prefName}
+                    name={prefName}
+                    stroke={style?.color}
+                    strokeWidth={2}
+                    legendType={style?.shape}
+                    dot={{ r: 2.5 }}
+                    activeDot={{ r: 5 }}
+                    connectNulls={false}
+                    isAnimationActive={false}
+                  />
                 );
-              }}
-            />
-
-            <Legend verticalAlign="top" height={36} />
-
-            {prefNames.map((prefName) => {
-              const style = seriesStyles.get(prefName);
-
-              return (
-                <Line
-                  key={prefName}
-                  type="monotone"
-                  dataKey={prefName}
-                  name={prefName}
-                  stroke={style?.color}
-                  strokeWidth={2}
-                  legendType={style?.shape}
-                  dot={{ r: 2.5 }}
-                  activeDot={{ r: 5 }}
-                  connectNulls={false}
-                  isAnimationActive={false}
-                />
-              );
-            })}
-          </LineChart>
-        </ResponsiveContainer>
+              })}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       {hasEstimate && <p className={styles.note}>※ {boundaryYear} 年より後の値は推計値です。</p>}

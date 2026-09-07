@@ -49,7 +49,7 @@ export function PrefectureSelector({
               </span>
             )}
           </span>
-          <Button onClick={onClear} disabled={selectedCount === 0}>
+          <Button variant="link" onClick={onClear} disabled={selectedCount === 0}>
             すべて解除
           </Button>
         </div>
