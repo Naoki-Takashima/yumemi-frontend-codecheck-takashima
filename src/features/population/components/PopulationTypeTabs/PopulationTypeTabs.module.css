@@ -5,8 +5,8 @@
   overflow: auto hidden;
   scroll-snap-type: x proximity;
   scrollbar-width: none;
-  }
-  
+}
+
 .tablist::-webkit-scrollbar {
   display: none;
 }

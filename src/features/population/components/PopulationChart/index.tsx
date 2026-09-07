@@ -15,6 +15,7 @@ import {
 import styles from '@/features/population/components/PopulationChart/PopulationChart.module.css';
 import { formatPopulation, formatPopulationShort } from '@/features/population/lib/formatNumber';
 import { seriesColor, seriesShape } from '@/features/population/lib/seriesColor';
+import { sortByPopulationDesc } from '@/features/population/lib/sortTooltipItems';
 import { toChartSeries, type PopulationEntry } from '@/features/population/lib/toChartSeries';
 import { POPULATION_TYPE_LABELS, type PopulationType } from '@/features/population/types';
 
@@ -88,7 +89,7 @@ export function PopulationChart({ entries, type }: PopulationChartProps) {
                     <div className={styles.tooltip}>
                       <p className={styles.tooltipYear}>{year} 年</p>
                       <div className={styles.tooltipList}>
-                        {payload.map((item) => (
+                        {sortByPopulationDesc(payload).map((item) => (
                           <div key={String(item.dataKey)} className={styles.tooltipItem}>
                             <span className={styles.tooltipName}>
                               <span

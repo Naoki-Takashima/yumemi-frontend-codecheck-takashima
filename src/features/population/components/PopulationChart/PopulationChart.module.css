@@ -2,6 +2,7 @@
   overflow: auto hidden;
   overscroll-behavior-x: contain;
 }
+
 .chart {
   min-width: var(--chart-min-width);
   height: clamp(18rem, 50vh, 32rem);
