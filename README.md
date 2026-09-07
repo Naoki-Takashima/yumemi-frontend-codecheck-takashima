@@ -25,15 +25,15 @@ https://yumemi-frontend-codecheck-takashima.vercel.app/
 
 | 分類           | 採用                                   | 理由                                                                                                                                                 |
 | -------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| フレームワーク | **Next.js 16.3.4**（App Router）       | 課題の必須要件が React。加えて **API キーをブラウザに出さないためにサーバー側の実行環境が要る**。Route Handler でその置き場所が標準で手に入る        |
+| フレームワーク | **Next.js 16.3.4**（App Router）       | 課題の必須要件の一つがReact。加えて **API キーをブラウザに出さないためにサーバー側の実行環境が要る**。Route Handler でその置き場所が標準で手に入る        |
 | 言語           | **TypeScript 5**                       | 課題の必須要件。上流 API のレスポンス型を zod から導出し、形状の変化を型エラーとして受け取る                                                         |
-| グラフ         | **Recharts 3.10**                      | 課題がサードパーティ製ライブラリを要求。React コンポーネントとして書けるため、DOM を直接触る層を持ち込まずに済む。SVG 出力なので拡大しても劣化しない |
-| スタイル       | **CSS Modules**                        | 課題が「スタイルは自前で記述」を要求するため UI フレームワークは使わない。Next.js に組み込みで、クラス名の衝突も防げる                               |
+| グラフ         | **Recharts 3.10**                      | 課題がサードパーティ製ライブラリを要求。React コンポーネントとして書けるため、DOM を直接触る層を持ち込まずに済む。 |
+| スタイル       | **CSS Modules**                        | スタイルは自前で記述するため UI フレームワークは使わない。Next.js に組み込みで、クラス名の衝突も防げる                               |
 | データ取得     | **TanStack Query 5**                   | 都道府県ごとに並列リクエストが走る。`useQueries` で「一部だけ失敗した」状態を素直に表現でき、キャッシュ・再試行・読み込み状態を自前で書かずに済む    |
 | スキーマ検証   | **zod 4**                              | 外部 API のレスポンスを信用せず境界で検証する。`z.infer` でアプリ側の型を導出し、検証と型を一箇所に寄せる                                            |
 | テスト         | **Vitest 5 + Testing Library + MSW 2** | Vite ベースで既存のビルド設定を共有できる。MSW は fetch を差し替えず HTTP 層でモックするため、本番と同じコードパスを通せる                           |
 | カタログ       | **Storybook 10.6**                     | コンポーネントの状態（読み込み中・エラー・上限到達）を一覧できる。`@storybook/addon-a11y` でアクセシビリティ違反も検出する                           |
-| 品質           | ESLint 9 / Stylelint 17 / Prettier 3   | 課題の必須要件。ESLint はサーバー専用モジュールの import 制限にも使っている（後述）                                                                  |
+| 品質           | ESLint 9 / Stylelint 17 / Prettier 3   | 課題の必須要件
 
 ## セットアップ
 
@@ -50,38 +50,6 @@ npm ci
 
 
 ## アーキテクチャ
-
-### API キーをブラウザに出さないための三層
-
-課題の「実際の API を使用する開発を想定する」という条件を、**API キーをブラウザのバンドルに含めない**と解釈した。上流 API を直接叩かず、自前のサーバー（BFF）を挟む。
-
-```
-ブラウザ                                サーバー（Next.js）              上流
-─────────────────────────────────────────────────────────────────────────────
-components / hooks
-  └ features/population/api.ts
-      └ shared/api/client/fetchJson.ts       ← /api/ 以外の URL を実行時に拒否
-            │
-            │  HTTP（同一オリジンのみ）
-            ▼
-                            app/api/prefectures/route.ts
-                            app/api/population/route.ts
-                              └ app/api/_lib/errorResponse.ts
-                              └ features/population/server/yumemiApi.ts
-                                    │  ← YUMEMI_API_KEY を読む唯一の場所
-                                    │     先頭で import 'server-only'
-                                    ▼
-                                        frontend-engineer-codecheck-api
-                                          .mirai.yumemi.io
-```
-
-この境界は 3 つの仕組みで守っている。
-
-1. **`import 'server-only'`** — `yumemiApi.ts` の先頭に置く。クライアントコンポーネントから import されるとビルドが失敗する
-2. **ESLint の `no-restricted-imports`** — `@/features/*/server/**` を import してよいのは `src/app/api/**` と `src/features/*/server/**` だけ（`eslint.config.mjs`）。ここを触るときは設定側も合わせて更新する
-3. **CSP の `connect-src 'self'`** — 仮にクライアント側に外部オリジンへの fetch を書いても、ブラウザが実行時に遮断する（`next.config.ts`）
-
-加えて `fetchJson` は `/api/` で始まる相対パス以外を実行時に拒否する。
 
 ### BFF のエンドポイント
 
